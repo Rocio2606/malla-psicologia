@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Malla Psicología</title>
+
+<style>
+  body {
+    font-family: Arial;
+    background: #f4f6f8;
+    padding: 20px;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  .materia {
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+    cursor: pointer;
+    font-weight: bold;
+  }
+
+  .bloqueada { background: #ccc; cursor: not-allowed; }
+  .disponible { background: #ffd966; }
+  .regular { background: #6fa8dc; color: white; }
+  .aprobada { background: #6aa84f; color: white; }
+</style>
+</head>
+
+<body>
+
+<h2>Malla Interactiva Psicología</h2>
+
+<div class="grid" id="malla"></div>
+
+<script>
+const materias = [
+  {
+    id: "intro",
+    nombre: "Introducción a la Psicología",
+    correlativasCursada: [],
+    correlativasFinal: []
+  },
+  {
+    id: "historia",
+    nombre: "Historia de la Psicología",
+    correlativasCursada: [],
+    correlativasFinal: []
+  },
+  {
+    id: "problemas",
+    nombre: "Problemas Epistemológicos",
+    correlativasCursada: ["intro"],
+    correlativasFinal: ["intro"]
+  }
+];
+
+let estado = {}; // 0 bloqueada, 1 disponible, 2 regular, 3 aprobada
+
+// Inicializar estados
+materias.forEach(m => {
+  estado[m.id] = 0;
+});
+
+// Verifica si puede cursar
+function puedeCursar(materia) {
+  return materia.correlativasCursada.every(id => estado[id] === 3);
+}
+
+// Verifica si puede rendir final
+function puedeFinal(materia) {
+  return materia.correlativasFinal.every(id => estado[id] === 3);
+}
+
+// Actualizar estados
+function actualizarEstados() {
+  materias.forEach(m => {
+    if (estado[m.id] === 3) return;
+
+    if (puedeCursar(m)) {
+      estado[m.id] = Math.max(estado[m.id], 1);
+    }
+
+    if (estado[m.id] === 2 && puedeFinal(m)) {
+      estado[m.id] = 2;
+    }
+  });
+}
+
+// Render
+function render() {
+  actualizarEstados();
+
+  const contenedor = document.getElementById("malla");
+  contenedor.innerHTML = "";
+
+  materias.forEach(m => {
+    const div = document.createElement("div");
+    div.classList.add("materia");
+
+    if (estado[m.id] === 0) div.classList.add("bloqueada");
+    if (estado[m.id] === 1) div.classList.add("disponible");
+    if (estado[m.id] === 2) div.classList.add("regular");
+    if (estado[m.id] === 3) div.classList.add("aprobada");
+
+    div.innerText = m.nombre;
+
+    div.onclick = () => {
+      if (estado[m.id] === 0) return;
+
+      if (estado[m.id] === 1) estado[m.id] = 2;
+      else if (estado[m.id] === 2) estado[m.id] = 3;
+
+      render();
+    };
+
+    contenedor.appendChild(div);
+  });
+}
+
+render();
+</script>
+
+</body>
+</html>
